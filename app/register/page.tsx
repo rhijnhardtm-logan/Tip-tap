@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { AlertCircle, Loader2 } from 'lucide-react'
+import { AlertCircle, Loader2, Info } from 'lucide-react'
 import { registerSchema } from '@/lib/schemas'
+import { mockAuth } from '@/lib/mock-auth'
 import axios from 'axios'
 import { ZodError } from 'zod'
 
@@ -49,10 +50,13 @@ export default function RegisterPage() {
       // Validate with Zod
       const validated = registerSchema.parse(formData)
 
-      // Call register API
-      const response = await axios.post('/api/auth/register', validated)
+      // Use mock auth to register
+      const name = `${formData.firstName} ${formData.lastName}`
+      const result = await mockAuth.register(validated.email, validated.password, name)
 
-      if (response.data.success) {
+      if (result?.user) {
+        // Store session in localStorage
+        localStorage.setItem('tiptap_user', JSON.stringify(result.user))
         // Redirect to dashboard
         router.push('/dashboard')
       }
@@ -65,8 +69,8 @@ export default function RegisterPage() {
           fieldErrors[path] = error.message
         })
         setErrors(fieldErrors)
-      } else if (err.response?.data?.error) {
-        setErrors({ general: err.response.data.error })
+      } else if (err.message) {
+        setErrors({ general: err.message })
       } else {
         setErrors({ general: 'Failed to register. Please try again.' })
       }
@@ -90,6 +94,12 @@ export default function RegisterPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <div className="mb-4 flex gap-2 p-3 bg-accent/10 border border-accent/20 rounded-lg">
+              <Info className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-muted-foreground">
+                Using mock authentication for testing. Your data is stored locally.
+              </p>
+            </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               {generalError && (
                 <div className="flex gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">

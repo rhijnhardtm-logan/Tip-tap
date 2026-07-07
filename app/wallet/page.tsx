@@ -7,9 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { AlertCircle, Loader2, Plus, Trash2, Check } from 'lucide-react'
-import axios from 'axios'
-import useSWR from 'swr'
+import { AlertCircle, Loader2, Plus, Trash2, Check, ArrowLeft, Info } from 'lucide-react'
+import { mockAuth, MockWallet, MockWorker } from '@/lib/mock-auth'
+import { TipSelector } from '@/components/tip-selector'
+import Link from 'next/link'
 
 interface PaymentMethod {
   id: string
@@ -17,14 +18,7 @@ interface PaymentMethod {
   accountIdentifier: string
   accountName?: string
   isDefault: boolean
-  isActive: boolean
 }
-
-interface WalletData {
-  paymentMethods: PaymentMethod[]
-}
-
-const fetcher = (url: string) => axios.get(url).then(res => res.data)
 
 const paymentTypeLabels: Record<string, string> = {
   revolut: 'Revolut',
@@ -33,14 +27,25 @@ const paymentTypeLabels: Record<string, string> = {
   bank_transfer: 'Bank Transfer',
 }
 
+const paymentTypeDescriptions: Record<string, string> = {
+  revolut: 'International mobile banking app',
+  snapscan: 'South African QR code payment',
+  zapper: 'South African instant payment',
+  bank_transfer: 'Direct bank transfer',
+}
+
 export default function WalletPage() {
   const router = useRouter()
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [showAddForm, setShowAddForm] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [wallet, setWallet] = useState<MockWallet | null>(null)
+  const [worker, setWorker] = useState<MockWorker | null>(null)
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showAddForm, setShowAddForm] = useState(false)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
-  
+
   const [formData, setFormData] = useState({
     type: 'snapscan' as const,
     accountIdentifier: '',
@@ -48,26 +53,45 @@ export default function WalletPage() {
     isDefault: false,
   })
 
-  const { data, isLoading, error: fetchError, mutate } = useSWR<WalletData>(
-    '/api/wallets/payment-methods',
-    fetcher
-  )
-
+  // Load wallet data on mount
   useEffect(() => {
-    const checkAuth = async () => {
+    const loadWallet = async () => {
       try {
-        const response = await axios.get('/api/auth/session')
-        if (!response.data.success) {
+        const userJson = localStorage.getItem('tiptap_user')
+        if (!userJson) {
           router.push('/login')
-        } else {
-          setIsAuthenticated(true)
+          return
+        }
+
+        const user = JSON.parse(userJson)
+        setUserId(user.id)
+
+        // Get wallet and worker data
+        const walletData = await mockAuth.getWallet(user.id)
+        const workerData = await mockAuth.getWorker(user.id)
+
+        if (!walletData || !workerData) {
+          setError('Failed to load wallet data')
+          return
+        }
+
+        setWallet(walletData)
+        setWorker(workerData)
+
+        // Load payment methods from localStorage
+        const stored = localStorage.getItem(`payment_methods_${user.id}`)
+        if (stored) {
+          setPaymentMethods(JSON.parse(stored))
         }
       } catch (err) {
-        router.push('/login')
+        console.error('Load failed:', err)
+        setError('Failed to load wallet')
+      } finally {
+        setIsLoading(false)
       }
     }
 
-    checkAuth()
+    loadWallet()
   }, [router])
 
   const handleAddPaymentMethod = async (e: React.FormEvent) => {
@@ -77,49 +101,104 @@ export default function WalletPage() {
     setIsSubmitting(true)
 
     try {
-      const response = await axios.post('/api/wallets/payment-methods', formData)
-      
-      if (response.data.success) {
-        setSuccessMessage('Payment method added successfully!')
-        setFormData({
-          type: 'snapscan',
-          accountIdentifier: '',
-          accountName: '',
-          isDefault: false,
-        })
-        setShowAddForm(false)
-        // Refresh data
-        mutate()
-        
-        // Clear success message after 3 seconds
-        setTimeout(() => setSuccessMessage(''), 3000)
+      if (!formData.accountIdentifier) {
+        setError('Please enter an account identifier')
+        return
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to add payment method')
+
+      const newMethod: PaymentMethod = {
+        id: `pm_${Date.now()}`,
+        type: formData.type,
+        accountIdentifier: formData.accountIdentifier,
+        accountName: formData.accountName || undefined,
+        isDefault: formData.isDefault || paymentMethods.length === 0,
+      }
+
+      const updated = [...paymentMethods, newMethod]
+      setPaymentMethods(updated)
+
+      // Save to localStorage
+      if (userId) {
+        localStorage.setItem(`payment_methods_${userId}`, JSON.stringify(updated))
+      }
+
+      setSuccessMessage('Payment method added successfully!')
+      setFormData({
+        type: 'snapscan',
+        accountIdentifier: '',
+        accountName: '',
+        isDefault: false,
+      })
+      setShowAddForm(false)
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(''), 3000)
+    } catch (err) {
+      setError('Failed to add payment method')
     } finally {
       setIsSubmitting(false)
     }
   }
 
   const handleDeletePaymentMethod = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this payment method?')) {
-      return
-    }
-
     try {
-      await axios.delete(`/api/wallets/payment-methods/${id}`)
-      mutate()
-      setSuccessMessage('Payment method deleted successfully!')
+      const updated = paymentMethods.filter(pm => pm.id !== id)
+      setPaymentMethods(updated)
+
+      if (userId) {
+        localStorage.setItem(`payment_methods_${userId}`, JSON.stringify(updated))
+      }
+
+      setSuccessMessage('Payment method deleted')
       setTimeout(() => setSuccessMessage(''), 3000)
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to delete payment method')
+    } catch (err) {
+      setError('Failed to delete payment method')
     }
   }
 
-  if (!isAuthenticated) {
+  const handleSetDefault = async (id: string) => {
+    try {
+      const updated = paymentMethods.map(pm => ({
+        ...pm,
+        isDefault: pm.id === id,
+      }))
+      setPaymentMethods(updated)
+
+      if (userId) {
+        localStorage.setItem(`payment_methods_${userId}`, JSON.stringify(updated))
+      }
+
+      setSuccessMessage('Default payment method updated')
+      setTimeout(() => setSuccessMessage(''), 3000)
+    } catch (err) {
+      setError('Failed to update default method')
+    }
+  }
+
+  const handleAddTip = async (amount: number, methodType: string) => {
+    if (!userId || !wallet || !worker) return
+
+    try {
+      // Update wallet and worker with transaction
+      await mockAuth.addTransaction(userId, amount, methodType)
+
+      // Refresh wallet and worker data
+      const updatedWallet = await mockAuth.getWallet(userId)
+      const updatedWorker = await mockAuth.getWorker(userId)
+
+      setWallet(updatedWallet)
+      setWorker(updatedWorker)
+      setSuccessMessage(`Tip of R${amount.toFixed(2)} recorded successfully!`)
+      setTimeout(() => setSuccessMessage(''), 3000)
+    } catch (err) {
+      setError('Failed to record tip')
+    }
+  }
+
+  if (isLoading) {
     return (
       <main className="min-h-screen bg-background">
-        <Header authenticated={false} />
+        <Header authenticated />
         <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
@@ -127,106 +206,170 @@ export default function WalletPage() {
     )
   }
 
+  if (!wallet || !worker) {
+    return (
+      <main className="min-h-screen bg-background">
+        <Header authenticated />
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="flex gap-2 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+            <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-destructive">{error || 'Failed to load wallet'}</p>
+          </div>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen bg-background">
-      <Header authenticated onLogout={() => router.push('/')} />
+      <Header authenticated />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">Wallet Management</h1>
-          <p className="text-muted-foreground mt-2">
-            Add and manage your payment methods
+        {/* Back Button */}
+        <Link href="/dashboard" className="flex items-center gap-2 text-primary hover:underline mb-6">
+          <ArrowLeft className="w-4 h-4" />
+          Back to Dashboard
+        </Link>
+
+        <h1 className="text-3xl font-bold text-foreground mb-8">Wallet & Payment Methods</h1>
+
+        {/* Info Banner */}
+        <div className="mb-6 flex gap-2 p-4 bg-accent/10 border border-accent/20 rounded-lg">
+          <Info className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-muted-foreground">
+            Using mock authentication. Payment methods are stored locally in your browser.
           </p>
         </div>
 
         {/* Messages */}
         {error && (
-          <div className="flex gap-2 p-4 bg-destructive/10 border border-destructive/20 rounded-lg mb-6">
+          <div className="mb-6 flex gap-2 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
             <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
             <p className="text-sm text-destructive">{error}</p>
           </div>
         )}
 
         {successMessage && (
-          <div className="flex gap-2 p-4 bg-green-100 border border-green-200 rounded-lg mb-6">
-            <Check className="w-5 h-5 text-green-700 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-green-700">{successMessage}</p>
+          <div className="mb-6 flex gap-2 p-4 bg-primary/10 border border-primary/20 rounded-lg">
+            <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-primary">{successMessage}</p>
           </div>
         )}
 
-        {/* Add Payment Method Form */}
-        {showAddForm && (
-          <Card className="mb-8 border-primary/20">
-            <CardHeader>
-              <CardTitle>Add Payment Method</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleAddPaymentMethod} className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="type">Payment Type</Label>
-                    <select
-                      id="type"
-                      value={formData.type}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        type: e.target.value as any
-                      }))}
-                      className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground"
-                    >
-                      <option value="snapscan">SnapScan</option>
-                      <option value="revolut">Revolut</option>
-                      <option value="zapper">Zapper</option>
-                      <option value="bank_transfer">Bank Transfer</option>
-                    </select>
-                  </div>
+        {/* Wallet Balance */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Wallet Balance</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-4xl font-bold text-primary mb-4">
+              R{wallet.balance.toFixed(2)}
+            </div>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-muted-foreground">Today&apos;s Earnings</p>
+                <p className="text-lg font-semibold mt-1">R{worker.today_earnings.toFixed(2)}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Total Received</p>
+                <p className="text-lg font-semibold mt-1">R{wallet.total_received.toFixed(2)}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="accountName">Account Name (Optional)</Label>
-                    <Input
-                      id="accountName"
-                      placeholder="Your name"
-                      value={formData.accountName}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        accountName: e.target.value
-                      }))}
-                    />
-                  </div>
+        {/* Tip Recording Section */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Record a Tip</CardTitle>
+            <CardDescription>
+              Quickly add tips you&apos;ve received from customers
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <TipSelector onAddTip={handleAddTip} />
+          </CardContent>
+        </Card>
+
+        {/* Payment Methods */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Payment Methods</CardTitle>
+              <CardDescription>
+                Add accounts to receive your tips
+              </CardDescription>
+            </div>
+            {!showAddForm && (
+              <Button onClick={() => setShowAddForm(true)} className="gap-2">
+                <Plus className="w-4 h-4" />
+                Add Method
+              </Button>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Add Payment Method Form */}
+            {showAddForm && (
+              <form onSubmit={handleAddPaymentMethod} className="border-t pt-4 space-y-4">
+                <div>
+                  <Label htmlFor="type">Payment Type</Label>
+                  <select
+                    id="type"
+                    value={formData.type}
+                    onChange={(e) =>
+                      setFormData({ ...formData, type: e.target.value as any })
+                    }
+                    className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground mt-1"
+                  >
+                    <option value="snapscan">SnapScan</option>
+                    <option value="zapper">Zapper</option>
+                    <option value="revolut">Revolut</option>
+                    <option value="bank_transfer">Bank Transfer</option>
+                  </select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {paymentTypeDescriptions[formData.type]}
+                  </p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="accountIdentifier">Account Identifier</Label>
+                <div>
+                  <Label htmlFor="identifier">
+                    Account Identifier
+                  </Label>
                   <Input
-                    id="accountIdentifier"
-                    placeholder={
-                      formData.type === 'snapscan' ? 'your@email.com' :
-                      formData.type === 'revolut' ? '@username or IBAN' :
-                      formData.type === 'zapper' ? '+27712345678' :
-                      'Bank account details'
-                    }
+                    id="identifier"
+                    placeholder="e.g., your phone number or account number"
                     value={formData.accountIdentifier}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      accountIdentifier: e.target.value
-                    }))}
-                    required
+                    onChange={(e) =>
+                      setFormData({ ...formData, accountIdentifier: e.target.value })
+                    }
+                    disabled={isSubmitting}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="name">Account Name (Optional)</Label>
+                  <Input
+                    id="name"
+                    placeholder="e.g., John's SnapScan"
+                    value={formData.accountName}
+                    onChange={(e) =>
+                      setFormData({ ...formData, accountName: e.target.value })
+                    }
+                    disabled={isSubmitting}
                   />
                 </div>
 
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
-                    id="isDefault"
+                    id="default"
                     checked={formData.isDefault}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      isDefault: e.target.checked
-                    }))}
-                    className="w-4 h-4"
+                    onChange={(e) =>
+                      setFormData({ ...formData, isDefault: e.target.checked })
+                    }
+                    disabled={isSubmitting}
                   />
-                  <Label htmlFor="isDefault" className="cursor-pointer">
+                  <Label htmlFor="default" className="cursor-pointer">
                     Set as default payment method
                   </Label>
                 </div>
@@ -246,85 +389,62 @@ export default function WalletPage() {
                     type="button"
                     variant="outline"
                     onClick={() => setShowAddForm(false)}
+                    disabled={isSubmitting}
                   >
                     Cancel
                   </Button>
                 </div>
               </form>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Payment Methods List */}
-        <Card>
-          <CardHeader className="flex items-center justify-between">
-            <div>
-              <CardTitle>Your Payment Methods</CardTitle>
-              <CardDescription>
-                Manage how you receive tips
-              </CardDescription>
-            </div>
-            {!showAddForm && (
-              <Button size="sm" className="gap-2" onClick={() => setShowAddForm(true)}>
-                <Plus className="w-4 h-4" />
-                Add Method
-              </Button>
             )}
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-primary" />
-              </div>
-            ) : data?.paymentMethods && data.paymentMethods.length > 0 ? (
+
+            {/* Payment Methods List */}
+            {paymentMethods.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4">
+                No payment methods added yet. Add one to start receiving tips.
+              </p>
+            ) : (
               <div className="space-y-3">
-                {data.paymentMethods.map(method => (
+                {paymentMethods.map((method) => (
                   <div
                     key={method.id}
-                    className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
+                    className="flex items-center justify-between p-4 border border-border rounded-lg"
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="font-medium text-foreground">
+                        <p className="font-medium">
                           {paymentTypeLabels[method.type]}
                         </p>
                         {method.isDefault && (
-                          <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded">
+                          <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded">
                             Default
-                          </span>
-                        )}
-                        {!method.isActive && (
-                          <span className="text-xs px-2 py-1 bg-muted text-muted-foreground rounded">
-                            Inactive
                           </span>
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {method.accountIdentifier}
+                        {method.accountName || method.accountIdentifier}
                       </p>
-                      {method.accountName && (
-                        <p className="text-xs text-muted-foreground">
-                          {method.accountName}
-                        </p>
-                      )}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeletePaymentMethod(method.id)}
-                      disabled={isSubmitting}
-                    >
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
+
+                    <div className="flex gap-2">
+                      {!method.isDefault && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleSetDefault(method.id)}
+                        >
+                          Set Default
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeletePaymentMethod(method.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">No payment methods added yet</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Add a payment method to receive tips
-                </p>
               </div>
             )}
           </CardContent>

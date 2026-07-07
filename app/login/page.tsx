@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { AlertCircle, Loader2 } from 'lucide-react'
+import { AlertCircle, Loader2, Info } from 'lucide-react'
 import { loginSchema } from '@/lib/schemas'
+import { mockAuth } from '@/lib/mock-auth'
 import axios from 'axios'
 
 export default function LoginPage() {
@@ -35,16 +36,18 @@ export default function LoginPage() {
       // Validate with Zod
       const validated = loginSchema.parse(formData)
 
-      // Call login API
-      const response = await axios.post('/api/auth/login', validated)
-
-      if (response.data.success) {
+      // Use mock auth
+      const user = await mockAuth.login(validated.email, validated.password)
+      
+      if (user) {
+        // Store session in localStorage
+        localStorage.setItem('tiptap_user', JSON.stringify(user))
         // Redirect to dashboard
         router.push('/dashboard')
       }
     } catch (err: any) {
-      if (err.response?.data?.error) {
-        setError(err.response.data.error)
+      if (err.message) {
+        setError(err.message)
       } else if (err.errors) {
         // Zod validation errors
         setError(err.errors[0].message)
@@ -69,6 +72,12 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <div className="mb-4 flex gap-2 p-3 bg-accent/10 border border-accent/20 rounded-lg">
+              <Info className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-muted-foreground">
+                Using mock authentication for testing. Register a new account or use the demo account.
+              </p>
+            </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
                 <div className="flex gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
