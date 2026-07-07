@@ -1,0 +1,53 @@
+{
+  "name": "v0-project",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rhijnhardtm-logan/Tip-tap.git"
+  },
+  "keywords": [
+    "tipping",
+    "platform",
+    "south-africa",
+    "workers"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rhijnhardtm-logan/Tip-tap/issues"
+  },
+  "homepage": "https://github.com/rhijnhardtm-logan/Tip-tap#readme",
+  "dependencies": {
+    "@hookform/resolvers": "^5.4.0",
+    "@supabase/auth-helpers-nextjs": "^0.15.0",
+    "@supabase/supabase-js": "^2.110.1",
+    "@types/react": "^19.2.17",
+    "axios": "^1.18.1",
+    "better-auth": "^1.6.23",
+    "dotenv-local": "^1.0.3",
+    "next": "^16.2.10",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "swr": "^2.4.2",
+    "typescript": "^6.0.3",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.0",
+    "autoprefixer": "^10.5.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.23.0",
+    "postcss": "^8.5.16",
+    "tailwind-merge": "^3.6.0",
+    "tailwindcss": "^4.3.2"
+  }
+}
