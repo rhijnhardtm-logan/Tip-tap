@@ -8,16 +8,16 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { AlertCircle, Loader2, Database } from 'lucide-react'
+import { AlertCircle, Loader2, Zap } from 'lucide-react'
 import { registerSchema } from '@/lib/schemas'
-import axios from 'axios'
+import { mockAuth } from '@/lib/mock-auth'
 import { ZodError } from 'zod'
 
 interface FormErrors {
   [key: string]: string
 }
 
-export default function RegisterPage() {
+export default function RegisterMockPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<FormErrors>({})
@@ -47,9 +47,11 @@ export default function RegisterPage() {
     try {
       const validated = registerSchema.parse(formData)
 
-      const response = await axios.post('/api/auth/register', validated)
+      const name = `${formData.firstName} ${formData.lastName}`
+      const result = await mockAuth.register(validated.email, validated.password, name)
 
-      if (response.data.success) {
+      if (result?.user) {
+        localStorage.setItem('tiptap_user', JSON.stringify(result.user))
         router.push('/dashboard')
       }
     } catch (err: any) {
@@ -60,8 +62,8 @@ export default function RegisterPage() {
           fieldErrors[path] = error.message
         })
         setErrors(fieldErrors)
-      } else if (err.response?.data?.error) {
-        setErrors({ general: err.response.data.error })
+      } else if (err.message) {
+        setErrors({ general: err.message })
       } else {
         setErrors({ general: 'Failed to register. Please try again.' })
       }
@@ -80,17 +82,18 @@ export default function RegisterPage() {
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Database className="w-5 h-5" />
-              Create Account
+              <Zap className="w-5 h-5 text-accent" />
+              Create Account (Mock)
             </CardTitle>
             <CardDescription>
-              Join TipTap using Supabase
+              Testing mode - No Supabase required
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-900">
-                Using Supabase authentication. Ensure your environment variables are configured.
+            <div className="mb-4 flex gap-2 p-3 bg-accent/10 border border-accent/20 rounded-lg">
+              <Zap className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-muted-foreground">
+                Using mock authentication. Data is stored locally in your browser.
               </p>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -241,17 +244,17 @@ export default function RegisterPage() {
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">
                   Already have an account?{' '}
-                  <Link href="/login" className="text-primary hover:underline font-medium">
+                  <Link href="/login-mock" className="text-primary hover:underline font-medium">
                     Sign in
                   </Link>
                 </p>
               </div>
               <div className="pt-3 border-t text-center">
                 <p className="text-xs text-muted-foreground mb-2">
-                  Testing without Supabase?
+                  Have Supabase set up?
                 </p>
-                <Link href="/register-mock" className="text-sm text-accent hover:underline font-medium">
-                  Use mock authentication
+                <Link href="/register" className="text-sm text-primary hover:underline font-medium">
+                  Use Supabase authentication
                 </Link>
               </div>
             </div>

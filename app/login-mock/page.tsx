@@ -8,11 +8,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { AlertCircle, Loader2, Database } from 'lucide-react'
+import { AlertCircle, Loader2, Zap } from 'lucide-react'
 import { loginSchema } from '@/lib/schemas'
+import { mockAuth } from '@/lib/mock-auth'
 import axios from 'axios'
 
-export default function LoginPage() {
+export default function LoginMockPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
@@ -35,21 +36,23 @@ export default function LoginPage() {
       // Validate with Zod
       const validated = loginSchema.parse(formData)
 
-      // Call real Supabase login API
-      const response = await axios.post('/api/auth/login', validated)
-
-      if (response.data.success) {
+      // Use mock auth
+      const user = await mockAuth.login(validated.email, validated.password)
+      
+      if (user) {
+        // Store session in localStorage
+        localStorage.setItem('tiptap_user', JSON.stringify(user))
         // Redirect to dashboard
         router.push('/dashboard')
       }
     } catch (err: any) {
-      if (err.response?.data?.error) {
-        setError(err.response.data.error)
+      if (err.message) {
+        setError(err.message)
       } else if (err.errors) {
         // Zod validation errors
         setError(err.errors[0].message)
       } else {
-        setError('Failed to login. Please check your email and password.')
+        setError('Failed to login. Please try again.')
       }
     } finally {
       setIsLoading(false)
@@ -64,17 +67,18 @@ export default function LoginPage() {
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Database className="w-5 h-5" />
-              Sign In
+              <Zap className="w-5 h-5 text-accent" />
+              Sign In (Mock)
             </CardTitle>
             <CardDescription>
-              Sign in to your TipTap account with Supabase
+              Testing mode - No Supabase required
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-900">
-                Using Supabase authentication. Make sure to set up your environment variables and run the database migration.
+            <div className="mb-4 flex gap-2 p-3 bg-accent/10 border border-accent/20 rounded-lg">
+              <Zap className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-muted-foreground">
+                Using mock authentication. Data is stored locally in your browser.
               </p>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -129,17 +133,17 @@ export default function LoginPage() {
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">
                   Don&apos;t have an account?{' '}
-                  <Link href="/register" className="text-primary hover:underline font-medium">
+                  <Link href="/register-mock" className="text-primary hover:underline font-medium">
                     Sign up
                   </Link>
                 </p>
               </div>
               <div className="pt-3 border-t text-center">
                 <p className="text-xs text-muted-foreground mb-2">
-                  Testing without Supabase?
+                  Have Supabase set up?
                 </p>
-                <Link href="/login-mock" className="text-sm text-accent hover:underline font-medium">
-                  Use mock authentication
+                <Link href="/login" className="text-sm text-primary hover:underline font-medium">
+                  Use Supabase authentication
                 </Link>
               </div>
             </div>

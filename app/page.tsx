@@ -15,13 +15,13 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-4">
             <Link
-              href="/login"
+              href="/login-mock"
               className="text-foreground hover:text-primary transition-colors"
             >
               Sign In
             </Link>
             <Link
-              href="/register"
+              href="/register-mock"
               className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
             >
               Get Started
@@ -42,7 +42,7 @@ export default function Home() {
             </p>
             <div className="flex gap-4">
               <Link
-                href="/register"
+                href="/register-mock"
                 className="bg-primary text-primary-foreground px-6 py-3 rounded-lg hover:opacity-90 transition-opacity inline-flex items-center gap-2"
               >
                 Start Earning <ArrowRight className="w-4 h-4" />
@@ -97,6 +97,75 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <h2 className="text-3xl font-bold text-foreground text-center mb-12">Choose Your Authentication</h2>
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="border border-accent/20 rounded-lg p-8 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Zap className="w-6 h-6 text-accent" />
+                <h3 className="text-2xl font-bold text-foreground">Mock Mode</h3>
+              </div>
+              <p className="text-muted-foreground mb-6">
+                Perfect for testing and exploring TipTap without any setup. All data is stored locally in your browser.
+              </p>
+              <ul className="space-y-2 text-sm text-muted-foreground mb-8">
+                <li>✓ No Supabase required</li>
+                <li>✓ Instant setup</li>
+                <li>✓ Local browser storage</li>
+                <li>✓ Full feature testing</li>
+              </ul>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Link
+                href="/register-mock"
+                className="bg-accent text-accent-foreground px-6 py-2 rounded-lg hover:opacity-90 transition-opacity text-center font-medium"
+              >
+                Get Started (Mock)
+              </Link>
+              <Link
+                href="/login-mock"
+                className="border border-accent text-accent px-6 py-2 rounded-lg hover:bg-accent/5 transition-colors text-center"
+              >
+                Sign In (Mock)
+              </Link>
+            </div>
+          </div>
+
+          <div className="border border-primary/20 rounded-lg p-8 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <TrendingUp className="w-6 h-6 text-primary" />
+                <h3 className="text-2xl font-bold text-foreground">Supabase</h3>
+              </div>
+              <p className="text-muted-foreground mb-6">
+                Production-ready authentication with Supabase PostgreSQL. Requires environment setup.
+              </p>
+              <ul className="space-y-2 text-sm text-muted-foreground mb-8">
+                <li>✓ Real database</li>
+                <li>✓ Production-grade</li>
+                <li>✓ Persistent data</li>
+                <li>✓ RLS security</li>
+              </ul>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Link
+                href="/register"
+                className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:opacity-90 transition-opacity text-center font-medium"
+              >
+                Get Started (Supabase)
+              </Link>
+              <Link
+                href="/login"
+                className="border border-primary text-primary px-6 py-2 rounded-lg hover:bg-primary/5 transition-colors text-center"
+              >
+                Sign In (Supabase)
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="bg-primary text-primary-foreground py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
@@ -106,10 +175,10 @@ export default function Home() {
             Join thousands of South African service workers on TipTap
           </p>
           <Link
-            href="/register"
+            href="/register-mock"
             className="bg-primary-foreground text-primary px-8 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity inline-block"
           >
-            Create Your Account
+            Try Now (Mock)
           </Link>
         </div>
       </section>
