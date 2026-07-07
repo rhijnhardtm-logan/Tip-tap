@@ -1,15 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-interface RouteParams {
-  params: {
-    id: string
-  }
-}
-
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params
+    const { id } = await params
     const supabase = await createClient()
 
     const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -64,14 +58,18 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     // Log audit event
-    await supabase.from('audit_logs').insert([
-      {
-        user_id: user.id,
-        action: 'payment_method_deleted',
-        table_name: 'payment_methods',
-        record_id: id,
-      },
-    ])
+    try {
+      await supabase.from('audit_logs').insert([
+        {
+          user_id: user.id,
+          action: 'payment_method_deleted',
+          table_name: 'payment_methods',
+          record_id: id,
+        } as any,
+      ])
+    } catch (auditError) {
+      console.error('[API] Audit log error:', auditError)
+    }
 
     return NextResponse.json({
       success: true,

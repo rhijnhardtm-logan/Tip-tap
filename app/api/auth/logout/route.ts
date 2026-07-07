@@ -16,12 +16,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Log audit event before logout
-    await supabase.from('audit_logs').insert([
-      {
-        user_id: user.id,
-        action: 'user_logged_out',
-      },
-    ])
+    try {
+      await supabase.from('audit_logs').insert([
+        {
+          user_id: user.id,
+          action: 'user_logged_out',
+        } as any,
+      ])
+    } catch (auditError) {
+      console.error('[API] Audit log error:', auditError)
+    }
 
     // Sign out
     const { error } = await supabase.auth.signOut()

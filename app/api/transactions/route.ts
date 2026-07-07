@@ -154,15 +154,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Log audit event
-    await supabase.from('audit_logs').insert([
-      {
-        user_id: user.id,
-        action: 'transaction_created',
-        table_name: 'transactions',
-        record_id: transaction.id,
-        details: { amount: validated.amount, method: validated.methodType },
-      },
-    ])
+    try {
+      await supabase.from('audit_logs').insert([
+        {
+          user_id: user.id,
+          action: 'transaction_created',
+          table_name: 'transactions',
+          record_id: transaction.id,
+          details: { amount: validated.amount, method: validated.methodType },
+        } as any,
+      ])
+    } catch (auditError) {
+      console.error('[API] Audit log error:', auditError)
+    }
 
     return NextResponse.json(
       {

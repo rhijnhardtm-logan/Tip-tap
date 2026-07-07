@@ -26,12 +26,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Log audit event
-    await supabase.from('audit_logs').insert([
-      {
-        user_id: data.user.id,
-        action: 'user_logged_in',
-      },
-    ])
+    try {
+      await supabase.from('audit_logs').insert([
+        {
+          user_id: data.user.id,
+          action: 'user_logged_in',
+        } as any,
+      ])
+    } catch (auditError) {
+      console.error('[API] Audit log error:', auditError)
+    }
 
     return NextResponse.json({
       success: true,
