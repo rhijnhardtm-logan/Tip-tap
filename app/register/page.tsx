@@ -53,7 +53,7 @@ export default function RegisterPage() {
         router.push('/dashboard')
       }
     } catch (err: any) {
-      if (err instanceof ZodError) {
+      if (err instanceof ZodError && err.errors) {
         const fieldErrors: FormErrors = {}
         err.errors.forEach(error => {
           const path = error.path[0] as string

@@ -55,14 +55,14 @@ export default function RegisterMockPage() {
         router.push('/dashboard')
       }
     } catch (err: any) {
-      if (err instanceof ZodError) {
+      if (err instanceof ZodError && err.errors) {
         const fieldErrors: FormErrors = {}
         err.errors.forEach(error => {
           const path = error.path[0] as string
           fieldErrors[path] = error.message
         })
         setErrors(fieldErrors)
-      } else if (err.message) {
+      } else if (err?.message) {
         setErrors({ general: err.message })
       } else {
         setErrors({ general: 'Failed to register. Please try again.' })
