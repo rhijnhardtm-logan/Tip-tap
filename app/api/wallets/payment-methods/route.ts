@@ -89,6 +89,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // If Stripe, redirect to onboarding instead
+    if (validated.type === 'stripe') {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Use /api/stripe/onboard endpoint for Stripe setup',
+          code: 'STRIPE_ONBOARDING_REQUIRED',
+        },
+        { status: 400 }
+      )
+    }
+
     // If setting as default, unset other defaults
     if (validated.isDefault) {
       await supabase

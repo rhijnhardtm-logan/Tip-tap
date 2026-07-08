@@ -109,6 +109,11 @@ export async function POST(request: NextRequest) {
 
     // Create transaction
     const referenceId = `TIP-${uuidv4().split('-')[0].toUpperCase()}`
+    
+    // For Stripe tips, mark as pending until Stripe webhook confirms
+    // For other payment methods, mark as completed immediately
+    const status = validated.methodType === 'stripe' ? 'stripe_pending' : 'completed'
+    
     const { data: transaction, error } = await supabase
       .from('transactions')
       .insert([
@@ -117,7 +122,7 @@ export async function POST(request: NextRequest) {
           amount: validated.amount,
           currency: 'ZAR',
           method_type: validated.methodType,
-          status: 'completed',
+          status: status,
           reference_id: referenceId,
           description: validated.description,
         },
@@ -132,25 +137,29 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Update worker total earned
-    const newTotal = (worker.total_tips_earned || 0) + validated.amount
-    await supabase
-      .from('workers')
-      .update({ total_tips_earned: newTotal })
-      .eq('id', worker.id)
-
-    // Update wallet balance
-    const { data: wallet } = await supabase
-      .from('wallets')
-      .select('balance')
-      .eq('worker_id', worker.id)
-      .single()
-
-    if (wallet) {
+    // For Stripe, tips are not immediately added to balance
+    // They will be added when Stripe webhook confirms payment
+    if (validated.methodType !== 'stripe') {
+      // Update worker total earned
+      const newTotal = (worker.total_tips_earned || 0) + validated.amount
       await supabase
+        .from('workers')
+        .update({ total_tips_earned: newTotal })
+        .eq('id', worker.id)
+
+      // Update wallet balance
+      const { data: wallet } = await supabase
         .from('wallets')
-        .update({ balance: (wallet.balance || 0) + validated.amount })
+        .select('balance')
         .eq('worker_id', worker.id)
+        .single()
+
+      if (wallet) {
+        await supabase
+          .from('wallets')
+          .update({ balance: (wallet.balance || 0) + validated.amount })
+          .eq('worker_id', worker.id)
+      }
     }
 
     // Log audit event

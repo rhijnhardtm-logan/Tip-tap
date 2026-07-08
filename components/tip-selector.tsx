@@ -18,7 +18,7 @@ interface TipSelectorProps {
 export function TipSelector({ workerId, onSuccess }: TipSelectorProps) {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null)
   const [customAmount, setCustomAmount] = useState('')
-  const [methodType, setMethodType] = useState<'snapscan' | 'revolut' | 'zapper' | 'cash'>('snapscan')
+  const [methodType, setMethodType] = useState<'snapscan' | 'revolut' | 'zapper' | 'cash' | 'stripe'>('snapscan')
   const [description, setDescription] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -147,6 +147,7 @@ export function TipSelector({ workerId, onSuccess }: TipSelectorProps) {
               <option value="revolut">Revolut</option>
               <option value="zapper">Zapper</option>
               <option value="cash">Cash</option>
+              <option value="stripe">Stripe (Wallet)</option>
             </select>
           </div>
 

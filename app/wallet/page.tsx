@@ -17,10 +17,12 @@ const fetcher = (url: string) => axios.get(url).then(res => res.data)
 
 interface PaymentMethod {
   id: string
-  type: 'revolut' | 'snapscan' | 'zapper' | 'bank_transfer'
+  type: 'revolut' | 'snapscan' | 'zapper' | 'bank_transfer' | 'stripe'
   account_identifier: string
   account_name?: string
   is_default: boolean
+  stripe_account_id?: string
+  stripe_connect_status?: string
 }
 
 interface WalletData {
@@ -35,6 +37,7 @@ const paymentTypeLabels: Record<string, string> = {
   snapscan: 'SnapScan',
   zapper: 'Zapper',
   bank_transfer: 'Bank Transfer',
+  stripe: 'Stripe',
 }
 
 const paymentTypeDescriptions: Record<string, string> = {
@@ -42,6 +45,7 @@ const paymentTypeDescriptions: Record<string, string> = {
   snapscan: 'South African QR code payment',
   zapper: 'South African instant payment',
   bank_transfer: 'Direct bank transfer',
+  stripe: 'Stripe Connect - Global payments platform',
 }
 
 export default function WalletPage() {
@@ -246,6 +250,7 @@ export default function WalletPage() {
                       <option value="snapscan">SnapScan</option>
                       <option value="zapper">Zapper</option>
                       <option value="bank_transfer">Bank Transfer</option>
+                      <option value="stripe">Stripe (Coming Soon)</option>
                     </select>
                     <p className="text-sm text-muted-foreground">
                       {paymentTypeDescriptions[formData.type]}
@@ -263,12 +268,15 @@ export default function WalletPage() {
                           ? 'SnapScan merchant ID'
                           : formData.type === 'zapper'
                           ? 'Cell number or email'
-                          : 'Bank account number'
+                          : formData.type === 'bank_transfer'
+                          ? 'Bank account number'
+                          : 'stripe-account-id (will generate automatically)'
                       }
                       value={formData.account_identifier}
                       onChange={(e) =>
                         setFormData({ ...formData, account_identifier: e.target.value })
                       }
+                      disabled={formData.type === 'stripe'}
                       required
                     />
                   </div>
