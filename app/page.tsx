@@ -136,16 +136,16 @@ export default function Home() {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <TrendingUp className="w-6 h-6 text-primary" />
-                <h3 className="text-2xl font-bold text-foreground">Supabase</h3>
+                <h3 className="text-2xl font-bold text-foreground">Create Account</h3>
               </div>
               <p className="text-muted-foreground mb-6">
-                Production-ready authentication with Supabase PostgreSQL. Requires environment setup.
+                Set up your TipTap account to start receiving tips securely and get paid directly to your wallet.
               </p>
               <ul className="space-y-2 text-sm text-muted-foreground mb-8">
-                <li>✓ Real database</li>
-                <li>✓ Production-grade</li>
-                <li>✓ Persistent data</li>
-                <li>✓ RLS security</li>
+                <li>✓ Secure payment handling</li>
+                <li>✓ Multiple payment methods</li>
+                <li>✓ Track all your earnings</li>
+                <li>✓ Fast payouts to your wallet</li>
               </ul>
             </div>
             <div className="flex flex-col gap-2">
@@ -153,13 +153,13 @@ export default function Home() {
                 href="/register"
                 className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:opacity-90 transition-opacity text-center font-medium"
               >
-                Get Started (Supabase)
+                Create Account
               </Link>
               <Link
                 href="/login"
                 className="border border-primary text-primary px-6 py-2 rounded-lg hover:bg-primary/5 transition-colors text-center"
               >
-                Sign In (Supabase)
+                Sign In
               </Link>
             </div>
           </div>
