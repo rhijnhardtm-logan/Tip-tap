@@ -49,11 +49,16 @@ CREATE TABLE IF NOT EXISTS public.wallets (
 CREATE TABLE IF NOT EXISTS public.payment_methods (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   worker_id UUID NOT NULL REFERENCES public.workers(id) ON DELETE CASCADE,
-  type TEXT NOT NULL CHECK (type IN ('revolut', 'snapscan', 'zapper', 'bank_transfer')),
+  type TEXT NOT NULL CHECK (type IN ('revolut', 'snapscan', 'zapper', 'bank_transfer', 'stripe')),
   account_identifier TEXT NOT NULL,
   account_name TEXT,
   is_default BOOLEAN DEFAULT false,
   is_active BOOLEAN DEFAULT true,
+  -- Stripe-specific fields
+  stripe_account_id TEXT,
+  stripe_connect_status TEXT DEFAULT 'pending', -- 'pending', 'connected', 'failed'
+  stripe_account_email TEXT,
+  stripe_onboarding_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
   UNIQUE(worker_id, type, account_identifier)

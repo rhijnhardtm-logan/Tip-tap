@@ -1,7 +1,66 @@
+'use client'
+
 import Link from 'next/link'
-import { ArrowRight, TrendingUp, Users, Zap } from 'lucide-react'
+import { ArrowRight, TrendingUp, Users, Zap, ChevronLeft, ChevronRight } from 'lucide-react'
+import Image from 'next/image'
+import { useState, useEffect } from 'react'
+
+const processSteps = [
+  {
+    number: 1,
+    title: 'Create Account',
+    description: 'Sign up instantly with your email',
+    image: '/images/step-1-create-account.png',
+  },
+  {
+    number: 2,
+    title: 'Set Up Wallet',
+    description: 'Choose your payment method',
+    image: '/images/step-2-setup-wallet.png',
+  },
+  {
+    number: 3,
+    title: 'Work & Get Tips',
+    description: 'Tips arrive instantly',
+    image: '/images/step-3-work-get-tips.png',
+  },
+  {
+    number: 4,
+    title: 'Get Cash',
+    description: 'Direct to your wallet',
+    image: '/images/step-4-get-cash.png',
+  },
+]
 
 export default function Home() {
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const [isAutoPlay, setIsAutoPlay] = useState(true)
+
+  useEffect(() => {
+    if (!isAutoPlay) return
+
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % processSteps.length)
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [isAutoPlay])
+
+  const goToSlide = (index: number) => {
+    setCurrentSlide(index)
+    setIsAutoPlay(false)
+  }
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % processSteps.length)
+    setIsAutoPlay(false)
+  }
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + processSteps.length) % processSteps.length)
+    setIsAutoPlay(false)
+  }
+
   return (
     <main className="min-h-screen bg-background">
       {/* Navigation */}
@@ -55,10 +114,94 @@ export default function Home() {
               </Link>
             </div>
           </div>
-          <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-8 min-h-96 flex items-center justify-center">
-            <div className="text-center">
-              <TrendingUp className="w-24 h-24 text-primary mx-auto mb-4 opacity-50" />
-              <p className="text-muted-foreground">Your earnings, visualized</p>
+          <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-8 flex items-center justify-center">
+            <div className="w-full">
+              <h3 className="text-2xl font-bold text-foreground text-center mb-8">How TipTap Works</h3>
+              
+              {/* Carousel Container */}
+              <div className="relative">
+                {/* Slides */}
+                <div className="relative overflow-hidden rounded-xl bg-background border border-border">
+                  <div className="relative h-96 md:h-[450px]">
+                    {processSteps.map((step, index) => (
+                      <div
+                        key={index}
+                        className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${
+                          index === currentSlide ? 'opacity-100' : 'opacity-0'
+                        }`}
+                      >
+                        <Image
+                          src={step.image}
+                          alt={step.title}
+                          fill
+                          className="object-cover"
+                        />
+                        {/* Content Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6">
+                          <div className="text-white">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center font-bold text-lg">
+                                {step.number}
+                              </div>
+                              <h4 className="text-2xl font-bold">{step.title}</h4>
+                            </div>
+                            <p className="text-white/90">{step.description}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Navigation Arrows */}
+                  <button
+                    onClick={prevSlide}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white p-2 rounded-full transition-colors"
+                    aria-label="Previous slide"
+                  >
+                    <ChevronLeft className="w-6 h-6 text-foreground" />
+                  </button>
+                  <button
+                    onClick={nextSlide}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white p-2 rounded-full transition-colors"
+                    aria-label="Next slide"
+                  >
+                    <ChevronRight className="w-6 h-6 text-foreground" />
+                  </button>
+                </div>
+
+                {/* Dots Navigation */}
+                <div className="flex justify-center gap-2 mt-6">
+                  {processSteps.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => goToSlide(index)}
+                      className={`w-3 h-3 rounded-full transition-all ${
+                        index === currentSlide
+                          ? 'bg-primary w-8'
+                          : 'bg-border hover:bg-muted-foreground'
+                      }`}
+                      aria-label={`Go to slide ${index + 1}`}
+                    />
+                  ))}
+                </div>
+
+                {/* Step Details */}
+                <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                  {processSteps.map((step, index) => (
+                    <div
+                      key={index}
+                      className={`p-3 rounded-lg transition-colors ${
+                        index === currentSlide
+                          ? 'bg-primary/10 border border-primary'
+                          : 'bg-transparent'
+                      }`}
+                    >
+                      <p className="text-xs text-muted-foreground mb-1">{step.title}</p>
+                      <p className="text-xs font-medium text-foreground">{step.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -136,16 +279,16 @@ export default function Home() {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <TrendingUp className="w-6 h-6 text-primary" />
-                <h3 className="text-2xl font-bold text-foreground">Supabase</h3>
+                <h3 className="text-2xl font-bold text-foreground">Create Account</h3>
               </div>
               <p className="text-muted-foreground mb-6">
-                Production-ready authentication with Supabase PostgreSQL. Requires environment setup.
+                Set up your TipTap account to start receiving tips securely and get paid directly to your wallet.
               </p>
               <ul className="space-y-2 text-sm text-muted-foreground mb-8">
-                <li>✓ Real database</li>
-                <li>✓ Production-grade</li>
-                <li>✓ Persistent data</li>
-                <li>✓ RLS security</li>
+                <li>✓ Secure payment handling</li>
+                <li>✓ Multiple payment methods</li>
+                <li>✓ Track all your earnings</li>
+                <li>✓ Fast payouts to your wallet</li>
               </ul>
             </div>
             <div className="flex flex-col gap-2">
@@ -153,13 +296,13 @@ export default function Home() {
                 href="/register"
                 className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:opacity-90 transition-opacity text-center font-medium"
               >
-                Get Started (Supabase)
+                Create Account
               </Link>
               <Link
                 href="/login"
                 className="border border-primary text-primary px-6 py-2 rounded-lg hover:bg-primary/5 transition-colors text-center"
               >
-                Sign In (Supabase)
+                Sign In
               </Link>
             </div>
           </div>

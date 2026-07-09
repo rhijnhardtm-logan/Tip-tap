@@ -29,16 +29,23 @@ export const workerProfileSchema = z.object({
 
 // Payment method schema
 export const paymentMethodSchema = z.object({
-  type: z.enum(['revolut', 'snapscan', 'zapper', 'bank_transfer']),
+  type: z.enum(['revolut', 'snapscan', 'zapper', 'bank_transfer', 'stripe']),
   accountIdentifier: z.string().min(1, 'Account identifier is required'),
   accountName: z.string().optional(),
   isDefault: z.boolean().default(false),
+  stripeEmail: z.string().email('Invalid email for Stripe').optional(),
+})
+
+// Stripe onboarding schema
+export const stripeOnboardingSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  country: z.string().min(2, 'Country code is required'),
 })
 
 // Transaction schema
 export const transactionSchema = z.object({
   amount: z.number().positive('Amount must be greater than 0'),
-  methodType: z.enum(['revolut', 'snapscan', 'zapper', 'cash']),
+  methodType: z.enum(['revolut', 'snapscan', 'zapper', 'cash', 'stripe']),
   description: z.string().optional(),
 })
 
@@ -46,4 +53,5 @@ export type LoginInput = z.infer<typeof loginSchema>
 export type RegisterInput = z.infer<typeof registerSchema>
 export type WorkerProfileInput = z.infer<typeof workerProfileSchema>
 export type PaymentMethodInput = z.infer<typeof paymentMethodSchema>
+export type StripeOnboardingInput = z.infer<typeof stripeOnboardingSchema>
 export type TransactionInput = z.infer<typeof transactionSchema>
