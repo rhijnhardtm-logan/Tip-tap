@@ -56,9 +56,73 @@ export default function Home() {
             </div>
           </div>
           <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-8 min-h-96 flex items-center justify-center">
-            <div className="text-center">
-              <TrendingUp className="w-24 h-24 text-primary mx-auto mb-4 opacity-50" />
-              <p className="text-muted-foreground">Your earnings, visualized</p>
+            <div className="w-full">
+              <h3 className="text-2xl font-bold text-foreground text-center mb-8">How TipTap Works</h3>
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-2">
+                {/* Step 1 */}
+                <div className="flex flex-col items-center flex-1">
+                  <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-xl mb-2">
+                    1
+                  </div>
+                  <p className="text-sm font-medium text-foreground text-center">Create Account</p>
+                </div>
+
+                {/* Arrow */}
+                <ArrowRight className="w-6 h-6 text-primary hidden md:block -mx-2" />
+                <div className="h-1 w-8 bg-primary md:hidden mb-4"></div>
+
+                {/* Step 2 */}
+                <div className="flex flex-col items-center flex-1">
+                  <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-xl mb-2">
+                    2
+                  </div>
+                  <p className="text-sm font-medium text-foreground text-center">Set Up Wallet</p>
+                </div>
+
+                {/* Arrow */}
+                <ArrowRight className="w-6 h-6 text-primary hidden md:block -mx-2" />
+                <div className="h-1 w-8 bg-primary md:hidden mb-4"></div>
+
+                {/* Step 3 */}
+                <div className="flex flex-col items-center flex-1">
+                  <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-xl mb-2">
+                    3
+                  </div>
+                  <p className="text-sm font-medium text-foreground text-center">Work & Get Tips</p>
+                </div>
+
+                {/* Arrow */}
+                <ArrowRight className="w-6 h-6 text-primary hidden md:block -mx-2" />
+                <div className="h-1 w-8 bg-primary md:hidden mb-4"></div>
+
+                {/* Step 4 */}
+                <div className="flex flex-col items-center flex-1">
+                  <div className="w-16 h-16 bg-accent text-accent-foreground rounded-full flex items-center justify-center font-bold text-xl mb-2">
+                    4
+                  </div>
+                  <p className="text-sm font-medium text-foreground text-center">Get Cash</p>
+                </div>
+              </div>
+
+              {/* Details */}
+              <div className="mt-8 grid md:grid-cols-4 gap-4 text-center">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Minutes</p>
+                  <p className="text-sm font-medium text-foreground">Sign up instantly</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Choose Payment</p>
+                  <p className="text-sm font-medium text-foreground">Revolut, SnapScan, Zapper, Stripe</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Get Paid</p>
+                  <p className="text-sm font-medium text-foreground">Tips arrive instantly</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Complete</p>
+                  <p className="text-sm font-medium text-foreground">Direct to your wallet</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
