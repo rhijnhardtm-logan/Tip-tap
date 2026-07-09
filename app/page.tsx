@@ -1,7 +1,66 @@
+'use client'
+
 import Link from 'next/link'
-import { ArrowRight, TrendingUp, Users, Zap } from 'lucide-react'
+import { ArrowRight, TrendingUp, Users, Zap, ChevronLeft, ChevronRight } from 'lucide-react'
+import Image from 'next/image'
+import { useState, useEffect } from 'react'
+
+const processSteps = [
+  {
+    number: 1,
+    title: 'Create Account',
+    description: 'Sign up instantly with your email',
+    image: '/images/step-1-create-account.png',
+  },
+  {
+    number: 2,
+    title: 'Set Up Wallet',
+    description: 'Choose your payment method',
+    image: '/images/step-2-setup-wallet.png',
+  },
+  {
+    number: 3,
+    title: 'Work & Get Tips',
+    description: 'Tips arrive instantly',
+    image: '/images/step-3-work-get-tips.png',
+  },
+  {
+    number: 4,
+    title: 'Get Cash',
+    description: 'Direct to your wallet',
+    image: '/images/step-4-get-cash.png',
+  },
+]
 
 export default function Home() {
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const [isAutoPlay, setIsAutoPlay] = useState(true)
+
+  useEffect(() => {
+    if (!isAutoPlay) return
+
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % processSteps.length)
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [isAutoPlay])
+
+  const goToSlide = (index: number) => {
+    setCurrentSlide(index)
+    setIsAutoPlay(false)
+  }
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % processSteps.length)
+    setIsAutoPlay(false)
+  }
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + processSteps.length) % processSteps.length)
+    setIsAutoPlay(false)
+  }
+
   return (
     <main className="min-h-screen bg-background">
       {/* Navigation */}
@@ -55,72 +114,92 @@ export default function Home() {
               </Link>
             </div>
           </div>
-          <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-8 min-h-96 flex items-center justify-center">
+          <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-8 flex items-center justify-center">
             <div className="w-full">
               <h3 className="text-2xl font-bold text-foreground text-center mb-8">How TipTap Works</h3>
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-2">
-                {/* Step 1 */}
-                <div className="flex flex-col items-center flex-1">
-                  <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-xl mb-2">
-                    1
+              
+              {/* Carousel Container */}
+              <div className="relative">
+                {/* Slides */}
+                <div className="relative overflow-hidden rounded-xl bg-background border border-border">
+                  <div className="relative h-96 md:h-[450px]">
+                    {processSteps.map((step, index) => (
+                      <div
+                        key={index}
+                        className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${
+                          index === currentSlide ? 'opacity-100' : 'opacity-0'
+                        }`}
+                      >
+                        <Image
+                          src={step.image}
+                          alt={step.title}
+                          fill
+                          className="object-cover"
+                        />
+                        {/* Content Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6">
+                          <div className="text-white">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center font-bold text-lg">
+                                {step.number}
+                              </div>
+                              <h4 className="text-2xl font-bold">{step.title}</h4>
+                            </div>
+                            <p className="text-white/90">{step.description}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <p className="text-sm font-medium text-foreground text-center">Create Account</p>
+
+                  {/* Navigation Arrows */}
+                  <button
+                    onClick={prevSlide}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white p-2 rounded-full transition-colors"
+                    aria-label="Previous slide"
+                  >
+                    <ChevronLeft className="w-6 h-6 text-foreground" />
+                  </button>
+                  <button
+                    onClick={nextSlide}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white p-2 rounded-full transition-colors"
+                    aria-label="Next slide"
+                  >
+                    <ChevronRight className="w-6 h-6 text-foreground" />
+                  </button>
                 </div>
 
-                {/* Arrow */}
-                <ArrowRight className="w-6 h-6 text-primary hidden md:block -mx-2" />
-                <div className="h-1 w-8 bg-primary md:hidden mb-4"></div>
-
-                {/* Step 2 */}
-                <div className="flex flex-col items-center flex-1">
-                  <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-xl mb-2">
-                    2
-                  </div>
-                  <p className="text-sm font-medium text-foreground text-center">Set Up Wallet</p>
+                {/* Dots Navigation */}
+                <div className="flex justify-center gap-2 mt-6">
+                  {processSteps.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => goToSlide(index)}
+                      className={`w-3 h-3 rounded-full transition-all ${
+                        index === currentSlide
+                          ? 'bg-primary w-8'
+                          : 'bg-border hover:bg-muted-foreground'
+                      }`}
+                      aria-label={`Go to slide ${index + 1}`}
+                    />
+                  ))}
                 </div>
 
-                {/* Arrow */}
-                <ArrowRight className="w-6 h-6 text-primary hidden md:block -mx-2" />
-                <div className="h-1 w-8 bg-primary md:hidden mb-4"></div>
-
-                {/* Step 3 */}
-                <div className="flex flex-col items-center flex-1">
-                  <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-xl mb-2">
-                    3
-                  </div>
-                  <p className="text-sm font-medium text-foreground text-center">Work & Get Tips</p>
-                </div>
-
-                {/* Arrow */}
-                <ArrowRight className="w-6 h-6 text-primary hidden md:block -mx-2" />
-                <div className="h-1 w-8 bg-primary md:hidden mb-4"></div>
-
-                {/* Step 4 */}
-                <div className="flex flex-col items-center flex-1">
-                  <div className="w-16 h-16 bg-accent text-accent-foreground rounded-full flex items-center justify-center font-bold text-xl mb-2">
-                    4
-                  </div>
-                  <p className="text-sm font-medium text-foreground text-center">Get Cash</p>
-                </div>
-              </div>
-
-              {/* Details */}
-              <div className="mt-8 grid md:grid-cols-4 gap-4 text-center">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Minutes</p>
-                  <p className="text-sm font-medium text-foreground">Sign up instantly</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Choose Payment</p>
-                  <p className="text-sm font-medium text-foreground">Revolut, SnapScan, Zapper, Stripe</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Get Paid</p>
-                  <p className="text-sm font-medium text-foreground">Tips arrive instantly</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Complete</p>
-                  <p className="text-sm font-medium text-foreground">Direct to your wallet</p>
+                {/* Step Details */}
+                <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                  {processSteps.map((step, index) => (
+                    <div
+                      key={index}
+                      className={`p-3 rounded-lg transition-colors ${
+                        index === currentSlide
+                          ? 'bg-primary/10 border border-primary'
+                          : 'bg-transparent'
+                      }`}
+                    >
+                      <p className="text-xs text-muted-foreground mb-1">{step.title}</p>
+                      <p className="text-xs font-medium text-foreground">{step.description}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
