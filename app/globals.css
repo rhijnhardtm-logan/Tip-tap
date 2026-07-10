@@ -1,22 +1,38 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: white;
-  --color-foreground: rgb(9 9 10);
-  --color-card: white;
-  --color-card-foreground: rgb(9 9 10);
-  --color-muted: rgb(245 245 245);
-  --color-muted-foreground: rgb(115 115 115);
-  --color-accent: rgb(239 68 68);
-  --color-accent-foreground: white;
-  --color-primary: rgb(239 68 68);
+  /* South African Ubuntu-Inspired Color Palette */
+  /* Primary: Very Light Green - Fresh, Growth & Trust */
+  --color-primary: #4CAF50;
   --color-primary-foreground: white;
-  --color-secondary: rgb(100 116 139);
+  
+  /* Secondary: Deep Sage Green - Growth & Prosperity */
+  --color-secondary: #2D5016;
   --color-secondary-foreground: white;
-  --color-destructive: rgb(239 68 68);
+  
+  /* Accent: Gold/Marigold - Success & Sunshine */
+  --color-accent: #F4A460;
+  --color-accent-foreground: #1A1A1A;
+  
+  /* Backgrounds & Text */
+  --color-background: #F5F1ED;
+  --color-foreground: #1A1A1A;
+  --color-card: white;
+  --color-card-foreground: #1A1A1A;
+  
+  /* Muted Colors */
+  --color-muted: #E8E3DC;
+  --color-muted-foreground: #6B6B6B;
+  
+  /* Borders & Inputs */
+  --color-border: #D9D0C3;
+  --color-input: #E8E3DC;
+  
+  /* Destructive */
+  --color-destructive: #D32F2F;
   --color-destructive-foreground: white;
-  --color-border: rgb(229 231 235);
-  --color-input: rgb(229 231 235);
+  
+  /* Radius */
   --radius-lg: 0.5rem;
   --radius-md: 0.375rem;
   --radius-sm: 0.25rem;
