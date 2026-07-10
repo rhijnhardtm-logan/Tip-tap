@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 @theme {
-  /* Ubuntu-Inspired South African Color Palette */
-  /* Primary: Ubuntu Orange - Warmth & Community */
-  --color-primary: #E95420;
+  /* South African Ubuntu-Inspired Color Palette */
+  /* Primary: Very Light Green - Fresh, Growth & Trust */
+  --color-primary: #4CAF50;
   --color-primary-foreground: white;
   
   /* Secondary: Deep Sage Green - Growth & Prosperity */
@@ -29,7 +29,7 @@
   --color-input: #E8E3DC;
   
   /* Destructive */
-  --color-destructive: #E95420;
+  --color-destructive: #D32F2F;
   --color-destructive-foreground: white;
   
   /* Radius */
