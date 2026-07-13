@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { AlertCircle, Loader2 } from 'lucide-react'
+import { NFCTapZone } from '@/components/nfc-tap-zone'
 import axios from 'axios'
 
 const TIP_AMOUNTS = [1, 2, 5, 10, 20]
@@ -23,6 +24,7 @@ export function TipSelector({ workerId, onSuccess }: TipSelectorProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  const [nfcTapped, setNfcTapped] = useState(false)
 
   const finalAmount = selectedAmount || (customAmount ? parseFloat(customAmount) : null)
 
@@ -65,16 +67,66 @@ export function TipSelector({ workerId, onSuccess }: TipSelectorProps) {
     }
   }
 
+  const handleNFCTap = async () => {
+    if (!finalAmount) {
+      setError('Please select an amount first')
+      return
+    }
+
+    setNfcTapped(true)
+    setIsSubmitting(true)
+
+    try {
+      const response = await axios.post('/api/transactions', {
+        amount: finalAmount,
+        methodType,
+        description: description || undefined,
+      })
+
+      if (response.data.success) {
+        setSuccessMessage(`Tip of R${finalAmount.toFixed(2)} recorded successfully!`)
+        setSelectedAmount(null)
+        setCustomAmount('')
+        setDescription('')
+        setMethodType('snapscan')
+        setNfcTapped(false)
+
+        onSuccess?.(response.data.transaction.id)
+
+        setTimeout(() => {
+          setSuccessMessage('')
+        }, 3000)
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to record tip')
+      setNfcTapped(false)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Send a Tip</CardTitle>
-        <CardDescription>
-          Choose a preset amount or enter a custom amount
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="flex flex-col h-full">
+      {/* NFC Tap Zone - Top Half */}
+      <div className="flex-1 flex items-center justify-center min-h-[50vh] bg-gradient-to-b from-primary/5 to-transparent">
+        <NFCTapZone
+          isActive={!!finalAmount}
+          selectedAmount={selectedAmount}
+          onTap={handleNFCTap}
+          isProcessing={isSubmitting}
+        />
+      </div>
+
+      {/* Controls - Bottom Half */}
+      <Card className="flex-1 border-t border-l-0 border-r-0 border-b-0 rounded-t-2xl rounded-b-none">
+        <CardHeader className="pb-3">
+          <CardTitle>Send a Tip</CardTitle>
+          <CardDescription>
+            Choose amount, then tap NFC zone above
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
             <div className="flex gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
               <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
@@ -192,7 +244,8 @@ export function TipSelector({ workerId, onSuccess }: TipSelectorProps) {
             )}
           </Button>
         </form>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
